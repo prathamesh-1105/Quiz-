@@ -1,7 +1,26 @@
 // Quiz data is grouped as Subject -> Experiment -> Questions.
+const DATABASE_URL = "https://kvdb.io/TbCHjPP3ec2ejka5WYaXud/quizSubjects";
+
 let quizData = {
   subjects: []
 };
+
+function updateSyncStatus(status) {
+  const syncIndicator = document.getElementById("syncIndicator");
+  const syncText = document.getElementById("syncText");
+  if (!syncIndicator || !syncText) return;
+
+  syncIndicator.className = "sync-indicator " + status;
+  if (status === "synced") {
+    syncText.textContent = "Cloud Synced";
+  } else if (status === "syncing") {
+    syncText.textContent = "Syncing...";
+  } else if (status === "offline") {
+    syncText.textContent = "Offline Mode";
+  } else if (status === "error") {
+    syncText.textContent = "Sync Error";
+  }
+}
 
 let draftQuestions = [];
 let activeSubjectIndex = null;
@@ -45,11 +64,12 @@ document.addEventListener("keydown", handleAdminShortcut);
 loadQuizData();
 showStudentView();
 
-function showAdminView() {
+async function showAdminView() {
   adminSection.classList.remove("hidden");
   studentSection.classList.add("hidden");
   resultSection.classList.add("hidden");
-  loadQuizData();
+  savedQuizList.innerHTML = "<p class='empty-message'>Loading latest cloud data...</p>";
+  await loadQuizData();
   displaySavedQuizList();
 }
 
@@ -130,7 +150,35 @@ function saveQuiz() {
   showStudentView();
 }
 
-function loadQuizData() {
+async function loadQuizData() {
+  updateSyncStatus("syncing");
+  try {
+    const response = await fetch(DATABASE_URL);
+    if (response.ok) {
+      const text = await response.text();
+      if (text && text.trim() !== "") {
+        quizData = JSON.parse(text);
+        localStorage.setItem("quizSubjects", text);
+        updateSyncStatus("synced");
+        return;
+      }
+    } else if (response.status === 404) {
+      // Key not found in cloud database yet, load whatever is in localStorage
+      loadLocalData();
+      // Push it to the cloud so cloud and local are synced
+      await saveQuizDataCloudOnly();
+      updateSyncStatus("synced");
+      return;
+    }
+    throw new Error("HTTP error status " + response.status);
+  } catch (error) {
+    console.error("Cloud load failed, falling back to local cache:", error);
+    loadLocalData();
+    updateSyncStatus("offline");
+  }
+}
+
+function loadLocalData() {
   const savedData = localStorage.getItem("quizSubjects");
   const oldQuiz = localStorage.getItem("simpleQuiz");
 
@@ -156,13 +204,34 @@ function loadQuizData() {
           }
         ]
       };
-      saveQuizData();
+      localStorage.setItem("quizSubjects", JSON.stringify(quizData));
     }
   }
 }
 
 function saveQuizData() {
-  localStorage.setItem("quizSubjects", JSON.stringify(quizData));
+  const stringified = JSON.stringify(quizData);
+  localStorage.setItem("quizSubjects", stringified);
+  saveQuizDataCloudOnly(stringified);
+}
+
+async function saveQuizDataCloudOnly(stringifiedData) {
+  const data = stringifiedData || JSON.stringify(quizData);
+  updateSyncStatus("syncing");
+  try {
+    const response = await fetch(DATABASE_URL, {
+      method: "POST",
+      body: data
+    });
+    if (response.ok) {
+      updateSyncStatus("synced");
+    } else {
+      throw new Error("HTTP status " + response.status);
+    }
+  } catch (error) {
+    console.error("Cloud sync failed:", error);
+    updateSyncStatus("error");
+  }
 }
 
 function findOrCreateSubject(subjectName) {
@@ -391,12 +460,12 @@ function requireStudentName() {
   return true;
 }
 
-function showSubjects() {
+async function showSubjects() {
   if (!requireStudentName()) {
     return;
   }
 
-  loadQuizData();
+  await loadQuizData();
   resetQuizOnly();
   subjectList.innerHTML = "";
   experimentList.innerHTML = "";

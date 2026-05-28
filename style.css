@@ -18,6 +18,11 @@ body {
 .top-bar div {
   width: min(920px, 100%);
   margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .top-bar h1,
@@ -275,5 +280,80 @@ li {
   .question-list-item {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+/* Cloud Sync Indicator Styling */
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+/* Synced State */
+.sync-indicator.synced {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+.sync-indicator.synced .sync-dot {
+  background-color: #81c784;
+  box-shadow: 0 0 8px #81c784;
+}
+
+/* Syncing State */
+.sync-indicator.syncing {
+  background: rgba(33, 150, 243, 0.15);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+.sync-indicator.syncing .sync-dot {
+  background-color: #64b5f6;
+  box-shadow: 0 0 8px #64b5f6;
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+/* Offline State */
+.sync-indicator.offline {
+  background: rgba(255, 152, 0, 0.15);
+  border-color: rgba(255, 152, 0, 0.3);
+}
+.sync-indicator.offline .sync-dot {
+  background-color: #ffb74d;
+  box-shadow: 0 0 8px #ffb74d;
+}
+
+/* Error State */
+.sync-indicator.error {
+  background: rgba(244, 67, 54, 0.15);
+  border-color: rgba(244, 67, 54, 0.3);
+}
+.sync-indicator.error .sync-dot {
+  background-color: #e57373;
+  box-shadow: 0 0 8px #e57373;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
   }
 }
