@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Quiz App</title>
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+  <header class="top-bar">
+    <div>
+      <h1>Simple Quiz App</h1>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="adminSection" class="card hidden">
+      <div class="section-heading">
+        <h2>Admin Section</h2>
+        <p>Add a subject, experiment, questions, options, and correct answers.</p>
+      </div>
+
+      <button id="studentViewBtn" type="button" class="secondary-button back-button">Back to Student View</button>
+
+      <label for="subjectName">Subject Name</label>
+      <input type="text" id="subjectName" placeholder="Example: Python">
+
+      <label for="experimentName">Experiment Name</label>
+      <input type="text" id="experimentName" placeholder="Example: Experiment 1 - Variables">
+
+      <div class="question-form">
+        <label for="questionText">Question</label>
+        <textarea id="questionText" rows="3" placeholder="Type your question here"></textarea>
+
+        <div class="options-grid">
+          <div>
+            <label for="option1">Option 1</label>
+            <input type="text" id="option1" placeholder="First option">
+          </div>
+
+          <div>
+            <label for="option2">Option 2</label>
+            <input type="text" id="option2" placeholder="Second option">
+          </div>
+
+          <div>
+            <label for="option3">Option 3</label>
+            <input type="text" id="option3" placeholder="Third option">
+          </div>
+
+          <div>
+            <label for="option4">Option 4</label>
+            <input type="text" id="option4" placeholder="Fourth option">
+          </div>
+        </div>
+
+        <label for="correctAnswer">Correct Answer</label>
+        <select id="correctAnswer">
+          <option value="">Select correct answer</option>
+          <option value="0">Option 1</option>
+          <option value="1">Option 2</option>
+          <option value="2">Option 3</option>
+          <option value="3">Option 4</option>
+        </select>
+
+        <div class="button-row">
+          <button id="addQuestionBtn" type="button">Add Question</button>
+          <button id="saveQuizBtn" type="button" class="secondary-button">Save Quiz</button>
+        </div>
+      </div>
+
+      <div class="saved-list">
+        <h3>Questions Added</h3>
+        <ol id="questionList"></ol>
+      </div>
+
+      <div class="saved-list">
+        <h3>Saved Subjects & Experiments</h3>
+        <div id="savedQuizList" class="admin-manage-list"></div>
+      </div>
+    </section>
+
+    <section id="studentSection" class="card">
+      <div class="section-heading">
+        <h2>Student Section</h2>
+        <p>Enter your name, choose a subject, then start an experiment quiz.</p>
+      </div>
+
+      <label for="studentName">Student Name</label>
+      <input type="text" id="studentName" placeholder="Enter your name">
+
+      <button id="showSubjectsBtn" type="button">Show Subjects</button>
+
+      <div id="subjectList" class="choice-list hidden"></div>
+      <div id="experimentList" class="choice-list hidden"></div>
+
+      <form id="quizForm" class="quiz-form hidden">
+        <h3 id="studentQuizTitle"></h3>
+        <div id="quizQuestions"></div>
+        <button id="submitQuizBtn" type="submit">Submit Quiz</button>
+      </form>
+    </section>
+
+    <section id="resultSection" class="card hidden">
+      <div class="section-heading">
+        <h2>Results</h2>
+        <p id="studentResultName"></p>
+      </div>
+
+      <div class="result-box">
+        <p><strong>Score:</strong> <span id="scoreText"></span></p>
+        <p><strong>Percentage:</strong> <span id="percentageText"></span></p>
+      </div>
+
+      <h3>Correct Answers</h3>
+      <ol id="correctAnswersList"></ol>
+    </section>
+  </main>
+
+  <script src="script.js?v=2"></script>
+</body>
+</html>
