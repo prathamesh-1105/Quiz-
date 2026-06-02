@@ -157,6 +157,22 @@ button:hover {
   background: #fad2cf;
 }
 
+.edit-button {
+  margin-top: 0;
+  padding: 8px 12px;
+  color: #1a73e8;
+  background: #e8f0fe;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s ease;
+}
+
+.edit-button:hover {
+  background: #d2e3fc;
+}
+
 .saved-list {
   margin-top: 24px;
   padding-top: 18px;

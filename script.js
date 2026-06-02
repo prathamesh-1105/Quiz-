@@ -26,6 +26,7 @@ let draftQuestions = [];
 let activeSubjectIndex = null;
 let activeExperimentIndex = null;
 let activeQuiz = null;
+let editingDraftIndex = null;
 
 let expandedSubjects = new Set();
 let expandedExperiments = new Set();
@@ -126,14 +127,37 @@ function addQuestion() {
     return;
   }
 
-  draftQuestions.push({
+  const newQuestion = {
     question: questionText,
     options: options,
     correctAnswer: Number(correctAnswer)
-  });
+  };
+
+  if (editingDraftIndex !== null) {
+    draftQuestions[editingDraftIndex] = newQuestion;
+    editingDraftIndex = null;
+    document.getElementById("addQuestionBtn").textContent = "Add Question";
+  } else {
+    draftQuestions.push(newQuestion);
+  }
 
   clearQuestionFields();
   displayQuestionList();
+}
+
+function editDraftQuestion(index) {
+  const item = draftQuestions[index];
+  questionTextInput.value = item.question;
+  optionInputs.forEach(function(input, optIdx) {
+    input.value = item.options[optIdx];
+  });
+  correctAnswerSelect.value = item.correctAnswer;
+
+  editingDraftIndex = index;
+  document.getElementById("addQuestionBtn").textContent = "Update Question";
+
+  // Switch creator mode to single question so they see the editor
+  tabSingleBtn.click();
 }
 
 function parseAndAddBulkQuestions() {
@@ -397,6 +421,17 @@ function displayQuestionList() {
     const questionText = document.createElement("span");
     questionText.textContent = item.question + " (Correct: " + item.options[item.correctAnswer] + ")";
 
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "collapsible-actions";
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-button";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", function() {
+      editDraftQuestion(index);
+    });
+
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "delete-button";
@@ -405,8 +440,10 @@ function displayQuestionList() {
       deleteQuestion(index);
     });
 
+    actionsDiv.appendChild(editButton);
+    actionsDiv.appendChild(deleteButton);
     listItem.appendChild(questionText);
-    listItem.appendChild(deleteButton);
+    listItem.appendChild(actionsDiv);
     questionList.appendChild(listItem);
   });
 }
@@ -491,6 +528,15 @@ function displaySavedQuizList() {
         const experimentActions = document.createElement("div");
         experimentActions.className = "collapsible-actions";
 
+        const experimentEditBtn = document.createElement("button");
+        experimentEditBtn.type = "button";
+        experimentEditBtn.className = "edit-button";
+        experimentEditBtn.textContent = "Edit Quiz";
+        experimentEditBtn.addEventListener("click", function(event) {
+          event.stopPropagation(); // Avoid toggling expansion
+          editExperiment(subjectIndex, experimentIndex);
+        });
+
         const experimentDeleteBtn = document.createElement("button");
         experimentDeleteBtn.type = "button";
         experimentDeleteBtn.className = "delete-button";
@@ -500,6 +546,7 @@ function displaySavedQuizList() {
           deleteExperiment(subjectIndex, experimentIndex);
         });
 
+        experimentActions.appendChild(experimentEditBtn);
         experimentActions.appendChild(experimentDeleteBtn);
         experimentHeader.appendChild(experimentTitle);
         experimentHeader.appendChild(experimentActions);
@@ -591,6 +638,24 @@ function deleteExperiment(subjectIndex, experimentIndex) {
   resetStudentSelection();
 }
 
+function editExperiment(subjectIndex, experimentIndex) {
+  const subject = quizData.subjects[subjectIndex];
+  const experiment = subject.experiments[experimentIndex];
+
+  subjectNameInput.value = subject.name;
+  experimentNameInput.value = experiment.name;
+
+  // Deep copy the questions so we are editing a draft, not live data until saved
+  draftQuestions = JSON.parse(JSON.stringify(experiment.questions));
+
+  displayQuestionList();
+
+  // Scroll smoothly to the creator form at the top
+  adminSection.scrollIntoView({ behavior: 'smooth' });
+
+  alert("Loaded \"" + experiment.name + "\" questions into the editor. You can now edit/add questions in your drafts list below. Click 'Save Quiz & Sync' when done to save your changes!");
+}
+
 function deleteSavedQuestion(subjectIndex, experimentIndex, questionIndex) {
   const questionText = quizData.subjects[subjectIndex].experiments[experimentIndex].questions[questionIndex].question;
 
@@ -616,6 +681,8 @@ function clearAdminDraft() {
   subjectNameInput.value = "";
   experimentNameInput.value = "";
   draftQuestions = [];
+  editingDraftIndex = null;
+  document.getElementById("addQuestionBtn").textContent = "Add Question";
   if (bulkPastedText) {
     bulkPastedText.value = "";
   }
