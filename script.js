@@ -27,6 +27,9 @@ let activeSubjectIndex = null;
 let activeExperimentIndex = null;
 let activeQuiz = null;
 
+let expandedSubjects = new Set();
+let expandedExperiments = new Set();
+
 const subjectNameInput = document.getElementById("subjectName");
 const experimentNameInput = document.getElementById("experimentName");
 const questionTextInput = document.getElementById("questionText");
@@ -54,12 +57,37 @@ const adminSection = document.getElementById("adminSection");
 const studentSection = document.getElementById("studentSection");
 const studentViewBtn = document.getElementById("studentViewBtn");
 
+// Tab and Bulk Elements
+const tabSingleBtn = document.getElementById("tabSingleBtn");
+const tabBulkBtn = document.getElementById("tabBulkBtn");
+const parseBulkBtn = document.getElementById("parseBulkBtn");
+const singleQuestionMode = document.getElementById("singleQuestionMode");
+const bulkQuestionMode = document.getElementById("bulkQuestionMode");
+const bulkPastedText = document.getElementById("bulkPastedText");
+
 studentViewBtn.addEventListener("click", showStudentView);
 document.getElementById("addQuestionBtn").addEventListener("click", addQuestion);
 document.getElementById("saveQuizBtn").addEventListener("click", saveQuiz);
 document.getElementById("showSubjectsBtn").addEventListener("click", showSubjects);
 quizForm.addEventListener("submit", submitQuiz);
 document.addEventListener("keydown", handleAdminShortcut);
+
+// Tab and Bulk Event Listeners
+tabSingleBtn.addEventListener("click", function() {
+  tabSingleBtn.classList.add("active");
+  tabBulkBtn.classList.remove("active");
+  singleQuestionMode.classList.remove("hidden");
+  bulkQuestionMode.classList.add("hidden");
+});
+
+tabBulkBtn.addEventListener("click", function() {
+  tabBulkBtn.classList.add("active");
+  tabSingleBtn.classList.remove("active");
+  bulkQuestionMode.classList.remove("hidden");
+  singleQuestionMode.classList.add("hidden");
+});
+
+parseBulkBtn.addEventListener("click", parseAndAddBulkQuestions);
 
 loadQuizData();
 showStudentView();
@@ -106,6 +134,113 @@ function addQuestion() {
 
   clearQuestionFields();
   displayQuestionList();
+}
+
+function parseAndAddBulkQuestions() {
+  const text = bulkPastedText.value.trim();
+  if (!text) {
+    alert("Please paste some questions from ChatGPT first.");
+    return;
+  }
+
+  const parsed = parseBulkQuestions(text);
+  if (parsed.length === 0) {
+    alert("Could not parse any questions. Please check the format and try again.");
+    return;
+  }
+
+  draftQuestions = draftQuestions.concat(parsed);
+  displayQuestionList();
+  bulkPastedText.value = "";
+  alert("Successfully parsed and added " + parsed.length + " questions to your drafts list!");
+}
+
+function parseBulkQuestions(text) {
+  const lines = text.split('\n');
+  const parsedQuestions = [];
+  let currentQuestion = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    const optionMatch = line.match(/^([a-d1-4]|\-|\*|•)[\.\)\-\:\s]+(.*)/i);
+    const answerMatch = line.match(/^(?:correct\s*answer|answer|correct\s*option|ans|correct)[\s\:\-]+(.*)/i);
+    const questionMatch = line.match(/^(?:q|question)?\s*\d+[\.\):\-\s]+(.*)/i);
+
+    if (answerMatch) {
+      if (currentQuestion) {
+        const ansVal = answerMatch[1].trim().toLowerCase();
+        let correctIndex = -1;
+        
+        if (ansVal.length === 1) {
+          if (ansVal === 'a' || ansVal === '1') correctIndex = 0;
+          else if (ansVal === 'b' || ansVal === '2') correctIndex = 1;
+          else if (ansVal === 'c' || ansVal === '3') correctIndex = 2;
+          else if (ansVal === 'd' || ansVal === '4') correctIndex = 3;
+        }
+
+        if (correctIndex === -1 && currentQuestion.options.length > 0) {
+          const matchIndex = currentQuestion.options.findIndex(opt => opt.toLowerCase() === ansVal);
+          if (matchIndex !== -1) {
+            correctIndex = matchIndex;
+          } else {
+            const partialMatchIndex = currentQuestion.options.findIndex(opt => 
+              opt.toLowerCase().includes(ansVal) || ansVal.includes(opt.toLowerCase())
+            );
+            if (partialMatchIndex !== -1) {
+              correctIndex = partialMatchIndex;
+            }
+          }
+        }
+
+        if (correctIndex !== -1) {
+          currentQuestion.correctAnswer = correctIndex;
+        } else {
+          currentQuestion.correctAnswer = 0; 
+        }
+      }
+    } else if (optionMatch && !questionMatch) {
+      if (currentQuestion) {
+        currentQuestion.options.push(optionMatch[2].trim());
+      }
+    } else {
+      let qText = line;
+      if (questionMatch) {
+        qText = questionMatch[1].trim();
+      }
+
+      if (currentQuestion) {
+        if (currentQuestion.options.length > 0) {
+          while (currentQuestion.options.length < 4) {
+            currentQuestion.options.push(`Option ${currentQuestion.options.length + 1}`);
+          }
+          if (currentQuestion.options.length > 4) {
+            currentQuestion.options = currentQuestion.options.slice(0, 4);
+          }
+          parsedQuestions.push(currentQuestion);
+        }
+      }
+
+      currentQuestion = {
+        question: qText,
+        options: [],
+        correctAnswer: 0
+      };
+    }
+  }
+
+  if (currentQuestion && currentQuestion.options.length > 0) {
+    while (currentQuestion.options.length < 4) {
+      currentQuestion.options.push(`Option ${currentQuestion.options.length + 1}`);
+    }
+    if (currentQuestion.options.length > 4) {
+      currentQuestion.options = currentQuestion.options.slice(0, 4);
+    }
+    parsedQuestions.push(currentQuestion);
+  }
+
+  return parsedQuestions;
 }
 
 function saveQuiz() {
@@ -288,60 +423,106 @@ function displaySavedQuizList() {
   }
 
   quizData.subjects.forEach(function(subject, subjectIndex) {
-    const subjectBox = document.createElement("div");
-    subjectBox.className = "manage-subject";
+    const subjectItem = document.createElement("div");
+    subjectItem.className = "collapsible-item";
+    if (expandedSubjects.has(subjectIndex)) {
+      subjectItem.className += " open";
+    }
 
     const subjectHeader = document.createElement("div");
-    subjectHeader.className = "manage-header";
+    subjectHeader.className = "collapsible-header";
+    
+    const subjectTitle = document.createElement("div");
+    subjectTitle.className = "collapsible-header-title subject-title";
+    subjectTitle.innerHTML = "<span class='collapsible-icon'>▶</span> 📂 <strong>" + subject.name + "</strong>";
 
-    const subjectTitle = document.createElement("strong");
-    subjectTitle.textContent = subject.name;
+    const subjectActions = document.createElement("div");
+    subjectActions.className = "collapsible-actions";
 
-    const subjectDeleteButton = document.createElement("button");
-    subjectDeleteButton.type = "button";
-    subjectDeleteButton.className = "delete-button";
-    subjectDeleteButton.textContent = "Delete Subject";
-    subjectDeleteButton.addEventListener("click", function() {
+    const subjectDeleteBtn = document.createElement("button");
+    subjectDeleteBtn.type = "button";
+    subjectDeleteBtn.className = "delete-button";
+    subjectDeleteBtn.textContent = "Delete Subject";
+    subjectDeleteBtn.addEventListener("click", function(event) {
+      event.stopPropagation(); // Avoid toggling expansion when clicking delete
       deleteSubject(subjectIndex);
     });
 
+    subjectActions.appendChild(subjectDeleteBtn);
     subjectHeader.appendChild(subjectTitle);
-    subjectHeader.appendChild(subjectDeleteButton);
-    subjectBox.appendChild(subjectHeader);
+    subjectHeader.appendChild(subjectActions);
+    subjectItem.appendChild(subjectHeader);
+
+    // Accordion toggle click listener
+    subjectHeader.addEventListener("click", function() {
+      if (expandedSubjects.has(subjectIndex)) {
+        expandedSubjects.delete(subjectIndex);
+        subjectItem.classList.remove("open");
+      } else {
+        expandedSubjects.add(subjectIndex);
+        subjectItem.classList.add("open");
+      }
+    });
+
+    const subjectBody = document.createElement("div");
+    subjectBody.className = "collapsible-body";
 
     if (!subject.experiments || subject.experiments.length === 0) {
       const emptyExperimentMessage = document.createElement("p");
       emptyExperimentMessage.className = "empty-message";
       emptyExperimentMessage.textContent = "No experiments saved in this subject.";
-      subjectBox.appendChild(emptyExperimentMessage);
+      subjectBody.appendChild(emptyExperimentMessage);
     } else {
       subject.experiments.forEach(function(experiment, experimentIndex) {
-        const experimentBox = document.createElement("div");
-        experimentBox.className = "manage-experiment";
+        const expKey = subjectIndex + "-" + experimentIndex;
+        const experimentItem = document.createElement("div");
+        experimentItem.className = "collapsible-item";
+        if (expandedExperiments.has(expKey)) {
+          experimentItem.className += " open";
+        }
 
         const experimentHeader = document.createElement("div");
-        experimentHeader.className = "manage-header";
+        experimentHeader.className = "collapsible-header";
 
-        const experimentTitle = document.createElement("span");
-        experimentTitle.textContent = experiment.name;
+        const experimentTitle = document.createElement("div");
+        experimentTitle.className = "collapsible-header-title experiment-title";
+        experimentTitle.innerHTML = "<span class='collapsible-icon'>▶</span> 📝 " + experiment.name;
 
-        const experimentDeleteButton = document.createElement("button");
-        experimentDeleteButton.type = "button";
-        experimentDeleteButton.className = "delete-button";
-        experimentDeleteButton.textContent = "Delete Experiment";
-        experimentDeleteButton.addEventListener("click", function() {
+        const experimentActions = document.createElement("div");
+        experimentActions.className = "collapsible-actions";
+
+        const experimentDeleteBtn = document.createElement("button");
+        experimentDeleteBtn.type = "button";
+        experimentDeleteBtn.className = "delete-button";
+        experimentDeleteBtn.textContent = "Delete Experiment";
+        experimentDeleteBtn.addEventListener("click", function(event) {
+          event.stopPropagation(); // Avoid toggling expansion
           deleteExperiment(subjectIndex, experimentIndex);
         });
 
+        experimentActions.appendChild(experimentDeleteBtn);
         experimentHeader.appendChild(experimentTitle);
-        experimentHeader.appendChild(experimentDeleteButton);
-        experimentBox.appendChild(experimentHeader);
+        experimentHeader.appendChild(experimentActions);
+        experimentItem.appendChild(experimentHeader);
+
+        experimentHeader.addEventListener("click", function() {
+          if (expandedExperiments.has(expKey)) {
+            expandedExperiments.delete(expKey);
+            experimentItem.classList.remove("open");
+          } else {
+            expandedExperiments.add(expKey);
+            experimentItem.classList.add("open");
+          }
+        });
+
+        const experimentBody = document.createElement("div");
+        experimentBody.className = "collapsible-body";
 
         if (!experiment.questions || experiment.questions.length === 0) {
           const emptyQuestionMessage = document.createElement("p");
           emptyQuestionMessage.className = "empty-message";
           emptyQuestionMessage.textContent = "No questions saved in this experiment.";
-          experimentBox.appendChild(emptyQuestionMessage);
+          experimentBody.appendChild(emptyQuestionMessage);
         } else {
           const savedQuestionList = document.createElement("ol");
 
@@ -356,7 +537,8 @@ function displaySavedQuizList() {
             questionDeleteButton.type = "button";
             questionDeleteButton.className = "delete-button";
             questionDeleteButton.textContent = "Delete";
-            questionDeleteButton.addEventListener("click", function() {
+            questionDeleteButton.addEventListener("click", function(event) {
+              event.stopPropagation();
               deleteSavedQuestion(subjectIndex, experimentIndex, questionIndex);
             });
 
@@ -365,14 +547,16 @@ function displaySavedQuizList() {
             savedQuestionList.appendChild(questionItem);
           });
 
-          experimentBox.appendChild(savedQuestionList);
+          experimentBody.appendChild(savedQuestionList);
         }
 
-        subjectBox.appendChild(experimentBox);
+        experimentItem.appendChild(experimentBody);
+        subjectBody.appendChild(experimentItem);
       });
     }
 
-    savedQuizList.appendChild(subjectBox);
+    subjectItem.appendChild(subjectBody);
+    savedQuizList.appendChild(subjectItem);
   });
 }
 
@@ -432,6 +616,9 @@ function clearAdminDraft() {
   subjectNameInput.value = "";
   experimentNameInput.value = "";
   draftQuestions = [];
+  if (bulkPastedText) {
+    bulkPastedText.value = "";
+  }
   clearQuestionFields();
   displayQuestionList();
 }

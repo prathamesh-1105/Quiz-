@@ -32,7 +32,13 @@
       <label for="experimentName">Experiment Name</label>
       <input type="text" id="experimentName" placeholder="Example: Experiment 1 - Variables">
 
-      <div class="question-form">
+      <!-- Tab Toggle Buttons -->
+      <div class="mode-tabs">
+        <button id="tabSingleBtn" type="button" class="tab-button active">Single Question</button>
+        <button id="tabBulkBtn" type="button" class="tab-button">Bulk ChatGPT Import</button>
+      </div>
+
+      <div id="singleQuestionMode" class="creator-mode question-form">
         <label for="questionText">Question</label>
         <textarea id="questionText" rows="3" placeholder="Type your question here"></textarea>
 
@@ -69,8 +75,32 @@
 
         <div class="button-row">
           <button id="addQuestionBtn" type="button">Add Question</button>
-          <button id="saveQuizBtn" type="button" class="secondary-button">Save Quiz</button>
         </div>
+      </div>
+
+      <div id="bulkQuestionMode" class="creator-mode question-form hidden">
+        <div class="help-card">
+          <h4>💡 How to paste from ChatGPT</h4>
+          <p>Ask ChatGPT to generate multiple choice questions, then paste them here. Standard formats are parsed automatically:</p>
+          <pre>1. What is the capital of India?
+A) Mumbai
+B) New Delhi
+C) Kolkata
+D) Chennai
+Answer: B</pre>
+          <p class="format-tip">Options can start with <strong>A-D</strong>, <strong>a-d</strong>, or <strong>1-4</strong>. The answer line can start with <strong>Answer:</strong>, <strong>Correct Option:</strong>, <strong>Ans:</strong>, etc.</p>
+        </div>
+
+        <label for="bulkPastedText">Paste ChatGPT Output Here</label>
+        <textarea id="bulkPastedText" rows="10" placeholder="Paste your bulk questions from ChatGPT here..."></textarea>
+
+        <div class="button-row">
+          <button id="parseBulkBtn" type="button">Parse & Add Questions</button>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button id="saveQuizBtn" type="button" class="secondary-button save-quiz-btn">Save Quiz & Sync</button>
       </div>
 
       <div class="saved-list">

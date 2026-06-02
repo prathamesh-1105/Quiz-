@@ -357,3 +357,174 @@ li {
     opacity: 1;
   }
 }
+
+/* Creator Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+  border-bottom: 2px solid #ede7f6;
+  padding-bottom: 8px;
+}
+
+.tab-button {
+  margin-top: 0;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5f6368;
+  background: transparent;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.tab-button:hover {
+  background: #f3edff;
+  color: #673ab7;
+}
+
+.tab-button.active {
+  color: #673ab7;
+  background: #ede7f6;
+  border-color: #673ab7;
+}
+
+/* Help Card for ChatGPT */
+.help-card {
+  background: #f8f6fc;
+  border-left: 4px solid #673ab7;
+  padding: 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 20px;
+}
+
+.help-card h4 {
+  margin: 0 0 8px;
+  color: #673ab7;
+  font-size: 16px;
+}
+
+.help-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #5f6368;
+}
+
+.help-card pre {
+  margin: 8px 0;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  color: #202124;
+}
+
+.format-tip {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Save Bar container */
+.save-bar {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #ede7f6;
+}
+
+.save-quiz-btn {
+  margin-top: 0;
+  width: 100%;
+}
+
+/* Collapsible Accordion Elements for Admin List */
+.collapsible-item {
+  margin-top: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fafafa;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.collapsible-header:hover {
+  background: #f3edff;
+}
+
+.collapsible-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  color: #202124;
+}
+
+.collapsible-header-title.subject-title {
+  color: #673ab7;
+  font-size: 15px;
+}
+
+.collapsible-header-title.experiment-title {
+  color: #4a4a4a;
+  font-size: 14px;
+}
+
+.collapsible-icon {
+  font-size: 12px;
+  color: #5f6368;
+  transition: transform 0.2s ease;
+}
+
+.collapsible-item.open > .collapsible-header .collapsible-icon {
+  transform: rotate(90deg);
+}
+
+.collapsible-item.open > .collapsible-header {
+  border-bottom: 1px solid #dadce0;
+  background: #ede7f6;
+}
+
+.collapsible-body {
+  display: none;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.collapsible-item.open > .collapsible-body {
+  display: block;
+}
+
+.collapsible-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collapsible-actions button {
+  margin-top: 0;
+  font-size: 12px;
+}
+
+/* Nested Collapsible Structure */
+.collapsible-body .collapsible-item {
+  border-color: #ede7f6;
+}
+
+.collapsible-body .collapsible-header {
+  padding: 10px 12px;
+}
