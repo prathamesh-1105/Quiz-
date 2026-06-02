@@ -66,12 +66,32 @@ const singleQuestionMode = document.getElementById("singleQuestionMode");
 const bulkQuestionMode = document.getElementById("bulkQuestionMode");
 const bulkPastedText = document.getElementById("bulkPastedText");
 
+// File Protocol, Warning, Modal and Export/Import Elements
+const fileProtocolWarning = document.getElementById("fileProtocolWarning");
+const closeWarningBtn = document.getElementById("closeWarningBtn");
+const viewHostingGuideBtn = document.getElementById("viewHostingGuideBtn");
+const hostingModal = document.getElementById("hostingModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const closeModalFooterBtn = document.getElementById("closeModalFooterBtn");
+const exportQuizBtn = document.getElementById("exportQuizBtn");
+const importQuizBtn = document.getElementById("importQuizBtn");
+const quizFileInput = document.getElementById("quizFileInput");
+
 studentViewBtn.addEventListener("click", showStudentView);
 document.getElementById("addQuestionBtn").addEventListener("click", addQuestion);
 document.getElementById("saveQuizBtn").addEventListener("click", saveQuiz);
 document.getElementById("showSubjectsBtn").addEventListener("click", showSubjects);
 quizForm.addEventListener("submit", submitQuiz);
 document.addEventListener("keydown", handleAdminShortcut);
+
+// Warning Banner & Modal Listeners
+if (closeWarningBtn) closeWarningBtn.addEventListener("click", closeWarningBanner);
+if (viewHostingGuideBtn) viewHostingGuideBtn.addEventListener("click", openHostingModal);
+if (closeModalBtn) closeModalBtn.addEventListener("click", closeHostingModal);
+if (closeModalFooterBtn) closeModalFooterBtn.addEventListener("click", closeHostingModal);
+if (exportQuizBtn) exportQuizBtn.addEventListener("click", exportQuizDataToFile);
+if (importQuizBtn) importQuizBtn.addEventListener("click", triggerQuizImport);
+if (quizFileInput) quizFileInput.addEventListener("change", importQuizDataFromFile);
 
 // Tab and Bulk Event Listeners
 tabSingleBtn.addEventListener("click", function() {
@@ -92,6 +112,7 @@ parseBulkBtn.addEventListener("click", parseAndAddBulkQuestions);
 
 loadQuizData();
 showStudentView();
+checkFileProtocol();
 
 async function showAdminView() {
   adminSection.classList.remove("hidden");
@@ -267,7 +288,7 @@ function parseBulkQuestions(text) {
   return parsedQuestions;
 }
 
-function saveQuiz() {
+async function saveQuiz() {
   const subjectName = subjectNameInput.value.trim();
   const experimentName = experimentNameInput.value.trim();
 
@@ -302,7 +323,7 @@ function saveQuiz() {
     subject.experiments.push(experiment);
   }
 
-  saveQuizData();
+  await saveQuizData();
   alert("Experiment quiz saved successfully.");
   clearAdminDraft();
   displaySavedQuizList();
@@ -312,7 +333,13 @@ function saveQuiz() {
 async function loadQuizData() {
   updateSyncStatus("syncing");
   try {
-    const response = await fetch(DATABASE_URL);
+    const response = await fetch(DATABASE_URL, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      }
+    });
     if (response.ok) {
       const text = await response.text();
       if (text && text.trim() !== "") {
@@ -368,10 +395,10 @@ function loadLocalData() {
   }
 }
 
-function saveQuizData() {
+async function saveQuizData() {
   const stringified = JSON.stringify(quizData);
   localStorage.setItem("quizSubjects", stringified);
-  saveQuizDataCloudOnly(stringified);
+  await saveQuizDataCloudOnly(stringified);
 }
 
 async function saveQuizDataCloudOnly(stringifiedData) {
@@ -867,4 +894,86 @@ function submitQuiz(event) {
   scoreText.textContent = score + " out of " + activeQuiz.questions.length;
   percentageText.textContent = percentage + "%";
   resultSection.classList.remove("hidden");
+}
+
+function checkFileProtocol() {
+  if (window.location.protocol === "file:") {
+    if (fileProtocolWarning) {
+      fileProtocolWarning.classList.remove("hidden");
+    }
+  }
+}
+
+function closeWarningBanner() {
+  if (fileProtocolWarning) {
+    fileProtocolWarning.classList.add("hidden");
+  }
+}
+
+function openHostingModal(event) {
+  if (event) event.preventDefault();
+  if (hostingModal) {
+    hostingModal.classList.remove("hidden");
+  }
+}
+
+function closeHostingModal() {
+  if (hostingModal) {
+    hostingModal.classList.add("hidden");
+  }
+}
+
+function exportQuizDataToFile() {
+  if (quizData.subjects.length === 0) {
+    alert("There are no quizzes to export. Please create some quizzes first.");
+    return;
+  }
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(quizData, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "quizzes.json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+function triggerQuizImport() {
+  if (quizFileInput) {
+    quizFileInput.click();
+  }
+}
+
+function importQuizDataFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsedData = JSON.parse(e.target.result);
+      if (parsedData && Array.isArray(parsedData.subjects)) {
+        quizData = parsedData;
+        localStorage.setItem("quizSubjects", JSON.stringify(quizData));
+        
+        // Refresh views
+        displaySavedQuizList();
+        
+        alert("Quiz file imported successfully! " + quizData.subjects.length + " subject(s) loaded.");
+        
+        // Auto-show subjects if in student view and name is filled
+        if (studentNameInput.value.trim()) {
+          showSubjects();
+        }
+      } else {
+        alert("Invalid file format. The file must contain a valid quiz database (with a subjects array).");
+      }
+    } catch (err) {
+      console.error("Error parsing import file:", err);
+      alert("Error parsing file. Please ensure it is a valid JSON file exported from this app.");
+    }
+    // Reset file input so same file can be imported again if needed
+    if (quizFileInput) quizFileInput.value = "";
+  };
+  reader.readAsText(file);
 }
