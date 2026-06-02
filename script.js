@@ -334,11 +334,7 @@ async function loadQuizData() {
   updateSyncStatus("syncing");
   try {
     const response = await fetch(DATABASE_URL, {
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache"
-      }
+      cache: "no-store"
     });
     if (response.ok) {
       const text = await response.text();

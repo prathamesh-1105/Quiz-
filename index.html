@@ -116,7 +116,11 @@ Answer: B</pre>
 
       <div class="save-bar">
         <button id="saveQuizBtn" type="button" class="secondary-button save-quiz-btn">Save Quiz & Sync</button>
-        <button id="exportQuizBtn" type="button" class="secondary-button export-btn" style="margin-top: 10px; background: #e8f5e9; color: #2e7d32; border: 1px solid rgba(46, 125, 50, 0.2);">📤 Export Quizzes to File</button>
+        <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="exportQuizBtn" type="button" class="secondary-button export-btn" style="margin-top: 0; flex: 1; min-width: 180px; background: #e8f5e9; color: #2e7d32; border: 1px solid rgba(46, 125, 50, 0.2);">📤 Export Quizzes to File</button>
+          <button id="importQuizBtn" type="button" class="secondary-button" style="margin-top: 0; flex: 1; min-width: 180px; background: #e3f2fd; color: #1565c0; border: 1px solid rgba(21, 101, 192, 0.2);">📥 Import Quiz File</button>
+          <input type="file" id="quizFileInput" accept=".json" class="hidden">
+        </div>
       </div>
 
       <div class="saved-list">
@@ -139,11 +143,7 @@ Answer: B</pre>
       <label for="studentName">Student Name</label>
       <input type="text" id="studentName" placeholder="Enter your name">
 
-      <div class="student-action-row">
-        <button id="showSubjectsBtn" type="button" style="margin-top: 18px; flex: 1;">Show Subjects</button>
-        <button id="importQuizBtn" type="button" class="secondary-button" style="margin-top: 18px; background: #e3f2fd; color: #2196f3; border: 1px solid rgba(33, 150, 243, 0.2);">📥 Import Quiz File</button>
-        <input type="file" id="quizFileInput" accept=".json" class="hidden">
-      </div>
+      <button id="showSubjectsBtn" type="button">Show Subjects</button>
 
       <div id="subjectList" class="choice-list hidden"></div>
       <div id="experimentList" class="choice-list hidden"></div>
