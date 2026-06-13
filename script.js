@@ -916,6 +916,7 @@ function submitQuiz(event) {
       score++;
     } else {
       wrongQuestions.push({
+        questionIndex: questionIndex,
         question: item.question,
         options: item.options,
         correctAnswer: item.correctAnswer,
@@ -950,7 +951,7 @@ function submitQuiz(event) {
 
       const title = document.createElement("p");
       title.className = "result-question-title";
-      title.textContent = `${idx + 1}. ${wrongQ.question}`;
+      title.textContent = `${wrongQ.questionIndex + 1}. ${wrongQ.question}`;
       card.appendChild(title);
 
       const compareContainer = document.createElement("div");
