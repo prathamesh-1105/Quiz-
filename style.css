@@ -772,4 +772,124 @@ li {
     transform: scale(1);
     opacity: 1;
   }
-}
+}
+
+/* Result Wrong Answers & Comparative Styles */
+#correctAnswersList {
+  list-style: none;
+  padding-left: 0;
+  margin: 18px 0 0;
+}
+.result-wrong-card {
+  margin-bottom: 20px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-left: 5px solid #d93025; /* Sleek google red side accent */
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: slideDown 0.3s ease-out;
+}
+
+.result-wrong-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.12);
+}
+
+.result-question-title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #202124;
+  line-height: 1.4;
+}
+
+.result-answers-compare {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.result-badge {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-badge-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 800;
+  opacity: 0.8;
+}
+
+.result-badge-value {
+  font-weight: bold;
+}
+
+/* Wrong Badge styling */
+.result-badge.wrong {
+  background: hsl(3, 80%, 97%);
+  color: hsl(3, 75%, 41%);
+  border: 1px solid hsl(3, 80%, 92%);
+}
+
+/* Correct Badge styling */
+.result-badge.correct {
+  background: hsl(138, 70%, 97%);
+  color: hsl(138, 75%, 28%);
+  border: 1px solid hsl(138, 70%, 90%);
+}
+
+/* Perfect Score Success Banner */
+.result-perfect-banner {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border: 1px solid #a5d6a7;
+  color: #1b5e20;
+  padding: 24px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.12);
+  animation: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-perfect-banner h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.result-perfect-banner p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Pulse animation for tapping title on mobile */
+.tap-pulse {
+  animation: titleTapPulse 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes titleTapPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+

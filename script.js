@@ -76,6 +76,7 @@ const closeModalFooterBtn = document.getElementById("closeModalFooterBtn");
 const exportQuizBtn = document.getElementById("exportQuizBtn");
 const importQuizBtn = document.getElementById("importQuizBtn");
 const quizFileInput = document.getElementById("quizFileInput");
+const appTitle = document.querySelector(".top-bar h1");
 
 studentViewBtn.addEventListener("click", showStudentView);
 document.getElementById("addQuestionBtn").addEventListener("click", addQuestion);
@@ -83,6 +84,38 @@ document.getElementById("saveQuizBtn").addEventListener("click", saveQuiz);
 document.getElementById("showSubjectsBtn").addEventListener("click", showSubjects);
 quizForm.addEventListener("submit", submitQuiz);
 document.addEventListener("keydown", handleAdminShortcut);
+
+// Mobile multi-tap admin shortcut (5 taps on app title)
+if (appTitle) {
+  let titleTapCount = 0;
+  let titleTapTimeout = null;
+
+  appTitle.addEventListener("click", function() {
+    titleTapCount++;
+
+    // Add pulse feedback animation
+    appTitle.classList.remove("tap-pulse");
+    void appTitle.offsetWidth; // Force reflow
+    appTitle.classList.add("tap-pulse");
+
+    if (titleTapTimeout) clearTimeout(titleTapTimeout);
+
+    if (titleTapCount >= 5) {
+      titleTapCount = 0;
+      appTitle.classList.remove("tap-pulse");
+      showAdminView();
+    } else {
+      titleTapTimeout = setTimeout(function() {
+        titleTapCount = 0;
+        appTitle.classList.remove("tap-pulse");
+      }, 2000); // 2 second window
+    }
+  });
+
+  appTitle.addEventListener("animationend", function() {
+    appTitle.classList.remove("tap-pulse");
+  });
+}
 
 // Warning Banner & Modal Listeners
 if (closeWarningBtn) closeWarningBtn.addEventListener("click", closeWarningBanner);
@@ -872,19 +905,100 @@ function submitQuiz(event) {
   let score = 0;
   correctAnswersList.innerHTML = "";
 
+  const wrongQuestions = [];
+  const reviewHeader = document.getElementById("answersReviewHeader") || resultSection.querySelector("h3");
+
   activeQuiz.questions.forEach(function(item, questionIndex) {
     const selectedOption = document.querySelector("input[name='question" + questionIndex + "']:checked");
+    const isCorrect = selectedOption && Number(selectedOption.value) === item.correctAnswer;
 
-    if (selectedOption && Number(selectedOption.value) === item.correctAnswer) {
+    if (isCorrect) {
       score++;
+    } else {
+      wrongQuestions.push({
+        question: item.question,
+        options: item.options,
+        correctAnswer: item.correctAnswer,
+        selectedAnswer: selectedOption ? Number(selectedOption.value) : null
+      });
     }
-
-    const answerItem = document.createElement("li");
-    answerItem.textContent = item.question + " - " + item.options[item.correctAnswer];
-    correctAnswersList.appendChild(answerItem);
   });
 
   const percentage = Math.round((score / activeQuiz.questions.length) * 100);
+
+  if (score === activeQuiz.questions.length) {
+    // Perfect score! Hide the header and display the success banner
+    if (reviewHeader) reviewHeader.classList.add("hidden");
+    
+    const perfectBanner = document.createElement("div");
+    perfectBanner.className = "result-perfect-banner";
+    perfectBanner.innerHTML = `
+      <h3>🎉 Perfect Score!</h3>
+      <p>Outstanding! You answered all ${activeQuiz.questions.length} questions correctly.</p>
+    `;
+    correctAnswersList.appendChild(perfectBanner);
+  } else {
+    // Show the incorrect questions review header
+    if (reviewHeader) {
+      reviewHeader.textContent = "Incorrect Questions & Corrections";
+      reviewHeader.classList.remove("hidden");
+    }
+
+    wrongQuestions.forEach(function(wrongQ, idx) {
+      const card = document.createElement("div");
+      card.className = "result-wrong-card";
+
+      const title = document.createElement("p");
+      title.className = "result-question-title";
+      title.textContent = `${idx + 1}. ${wrongQ.question}`;
+      card.appendChild(title);
+
+      const compareContainer = document.createElement("div");
+      compareContainer.className = "result-answers-compare";
+
+      // Selected answer (wrong) badge
+      const wrongBadge = document.createElement("div");
+      wrongBadge.className = "result-badge wrong";
+      
+      const wrongLabel = document.createElement("span");
+      wrongLabel.className = "result-badge-label";
+      wrongLabel.textContent = "Your Answer";
+      
+      const wrongValue = document.createElement("span");
+      wrongValue.className = "result-badge-value";
+      if (wrongQ.selectedAnswer !== null) {
+        wrongValue.textContent = wrongQ.options[wrongQ.selectedAnswer];
+      } else {
+        wrongValue.textContent = "[No Answer Selected]";
+      }
+      
+      wrongBadge.appendChild(wrongLabel);
+      wrongBadge.appendChild(wrongValue);
+      compareContainer.appendChild(wrongBadge);
+
+      // Correct answer badge
+      const correctBadge = document.createElement("div");
+      correctBadge.className = "result-badge correct";
+      
+      const correctLabel = document.createElement("span");
+      correctLabel.className = "result-badge-label";
+      correctLabel.textContent = "Correct Answer";
+      
+      const correctValue = document.createElement("span");
+      correctValue.className = "result-badge-value";
+      correctValue.textContent = wrongQ.options[wrongQ.correctAnswer];
+      
+      correctBadge.appendChild(correctLabel);
+      correctBadge.appendChild(correctValue);
+      compareContainer.appendChild(correctBadge);
+
+      card.appendChild(compareContainer);
+      
+      const listItem = document.createElement("li");
+      listItem.appendChild(card);
+      correctAnswersList.appendChild(listItem);
+    });
+  }
 
   studentResultName.textContent = "Student: " + studentNameInput.value.trim();
   scoreText.textContent = score + " out of " + activeQuiz.questions.length;
