@@ -783,8 +783,8 @@ li {
 .result-wrong-card {
   margin-bottom: 20px;
   padding: 18px;
-  background: #ffffff;
-  border: 1px solid #dadce0;
+  background: hsl(3, 80%, 98%); /* Soft light red background */
+  border: 1px solid hsl(3, 80%, 92%);
   border-left: 5px solid #d93025; /* Sleek google red side accent */
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08);
@@ -798,56 +798,49 @@ li {
 }
 
 .result-question-title {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   font-size: 15px;
   font-weight: bold;
   color: #202124;
-  line-height: 1.4;
-}
-
-.result-answers-compare {
+  line-height: 1.5;
   display: flex;
-  gap: 12px;
   flex-wrap: wrap;
-  align-items: stretch;
+  align-items: center;
+  gap: 8px;
 }
 
-.result-badge {
-  flex: 1;
-  min-width: 200px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  line-height: 1.4;
+.result-correct-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: hsl(138, 70%, 92%);
+  color: hsl(138, 75%, 25%);
+  border: 1px solid hsl(138, 70%, 86%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.result-your-answer-inline {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #5f6368;
+  font-weight: 600;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
-.result-badge-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-weight: 800;
-  opacity: 0.8;
-}
-
-.result-badge-value {
-  font-weight: bold;
-}
-
-/* Wrong Badge styling */
-.result-badge.wrong {
-  background: hsl(3, 80%, 97%);
-  color: hsl(3, 75%, 41%);
-  border: 1px solid hsl(3, 80%, 92%);
-}
-
-/* Correct Badge styling */
-.result-badge.correct {
-  background: hsl(138, 70%, 97%);
-  color: hsl(138, 75%, 28%);
-  border: 1px solid hsl(138, 70%, 90%);
+.wrong-highlight {
+  display: inline-flex;
+  align-items: center;
+  background: hsl(3, 80%, 93%);
+  color: hsl(3, 75%, 38%);
+  border: 1px solid hsl(3, 80%, 88%);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 700;
 }
 
 /* Perfect Score Success Banner */

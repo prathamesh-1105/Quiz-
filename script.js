@@ -945,55 +945,40 @@ function submitQuiz(event) {
       reviewHeader.classList.remove("hidden");
     }
 
-    wrongQuestions.forEach(function(wrongQ, idx) {
+    wrongQuestions.forEach(function(wrongQ) {
       const card = document.createElement("div");
       card.className = "result-wrong-card";
 
       const title = document.createElement("p");
       title.className = "result-question-title";
-      title.textContent = `${wrongQ.questionIndex + 1}. ${wrongQ.question}`;
+      
+      const textSpan = document.createElement("span");
+      textSpan.textContent = `${wrongQ.questionIndex + 1}. ${wrongQ.question}`;
+      title.appendChild(textSpan);
+
+      const correctSpan = document.createElement("span");
+      correctSpan.className = "result-correct-inline";
+      correctSpan.textContent = `✓ Correct Answer: ${wrongQ.options[wrongQ.correctAnswer]}`;
+      title.appendChild(correctSpan);
+
       card.appendChild(title);
 
-      const compareContainer = document.createElement("div");
-      compareContainer.className = "result-answers-compare";
+      const yourAnswerDiv = document.createElement("div");
+      yourAnswerDiv.className = "result-your-answer-inline";
+      
+      const labelText = document.createTextNode("Your Answer: ");
+      yourAnswerDiv.appendChild(labelText);
 
-      // Selected answer (wrong) badge
-      const wrongBadge = document.createElement("div");
-      wrongBadge.className = "result-badge wrong";
-      
-      const wrongLabel = document.createElement("span");
-      wrongLabel.className = "result-badge-label";
-      wrongLabel.textContent = "Your Answer";
-      
-      const wrongValue = document.createElement("span");
-      wrongValue.className = "result-badge-value";
+      const wrongHighlightSpan = document.createElement("span");
+      wrongHighlightSpan.className = "wrong-highlight";
       if (wrongQ.selectedAnswer !== null) {
-        wrongValue.textContent = wrongQ.options[wrongQ.selectedAnswer];
+        wrongHighlightSpan.textContent = wrongQ.options[wrongQ.selectedAnswer];
       } else {
-        wrongValue.textContent = "[No Answer Selected]";
+        wrongHighlightSpan.textContent = "[No Answer Selected]";
       }
-      
-      wrongBadge.appendChild(wrongLabel);
-      wrongBadge.appendChild(wrongValue);
-      compareContainer.appendChild(wrongBadge);
+      yourAnswerDiv.appendChild(wrongHighlightSpan);
 
-      // Correct answer badge
-      const correctBadge = document.createElement("div");
-      correctBadge.className = "result-badge correct";
-      
-      const correctLabel = document.createElement("span");
-      correctLabel.className = "result-badge-label";
-      correctLabel.textContent = "Correct Answer";
-      
-      const correctValue = document.createElement("span");
-      correctValue.className = "result-badge-value";
-      correctValue.textContent = wrongQ.options[wrongQ.correctAnswer];
-      
-      correctBadge.appendChild(correctLabel);
-      correctBadge.appendChild(correctValue);
-      compareContainer.appendChild(correctBadge);
-
-      card.appendChild(compareContainer);
+      card.appendChild(yourAnswerDiv);
       
       const listItem = document.createElement("li");
       listItem.appendChild(card);
