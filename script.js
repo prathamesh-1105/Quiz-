@@ -77,6 +77,7 @@ const exportQuizBtn = document.getElementById("exportQuizBtn");
 const importQuizBtn = document.getElementById("importQuizBtn");
 const quizFileInput = document.getElementById("quizFileInput");
 const appTitle = document.querySelector(".top-bar h1");
+const submitQuizBtn = document.getElementById("submitQuizBtn");
 
 studentViewBtn.addEventListener("click", showStudentView);
 document.getElementById("addQuestionBtn").addEventListener("click", addQuestion);
@@ -759,6 +760,13 @@ function resetStudentSelection() {
   studentQuizTitle.textContent = "";
   quizQuestions.innerHTML = "";
   correctAnswersList.innerHTML = "";
+  if (submitQuizBtn) {
+    submitQuizBtn.classList.remove("hidden");
+  }
+  const scoreBanner = quizForm.querySelector(".quiz-score-banner");
+  if (scoreBanner) {
+    scoreBanner.remove();
+  }
 }
 
 function requireStudentName() {
@@ -847,6 +855,13 @@ function resetQuizOnly() {
   studentQuizTitle.textContent = "";
   quizQuestions.innerHTML = "";
   correctAnswersList.innerHTML = "";
+  if (submitQuizBtn) {
+    submitQuizBtn.classList.remove("hidden");
+  }
+  const scoreBanner = quizForm.querySelector(".quiz-score-banner");
+  if (scoreBanner) {
+    scoreBanner.remove();
+  }
 }
 
 function startQuiz(experimentIndex) {
@@ -903,93 +918,92 @@ function submitQuiz(event) {
   }
 
   let score = 0;
-  correctAnswersList.innerHTML = "";
-
-  const wrongQuestions = [];
-  const reviewHeader = document.getElementById("answersReviewHeader") || resultSection.querySelector("h3");
 
   activeQuiz.questions.forEach(function(item, questionIndex) {
-    const selectedOption = document.querySelector("input[name='question" + questionIndex + "']:checked");
+    const questionBox = quizQuestions.children[questionIndex];
+    if (!questionBox) return;
+
+    // Disable all radios so student can't edit
+    const radios = questionBox.querySelectorAll("input[type='radio']");
+    radios.forEach(function(radio) {
+      radio.disabled = true;
+    });
+
+    const selectedOption = questionBox.querySelector("input[type='radio']:checked");
     const isCorrect = selectedOption && Number(selectedOption.value) === item.correctAnswer;
 
     if (isCorrect) {
       score++;
+    }
+
+    const questionTitle = questionBox.querySelector("p");
+    
+    // Clean any existing badge
+    const existingBadge = questionTitle.querySelector(".result-correct-inline, .result-correct-inline-right");
+    if (existingBadge) existingBadge.remove();
+
+    if (isCorrect) {
+      questionBox.classList.add("correct");
+      questionBox.classList.remove("incorrect");
+
+      const correctSpan = document.createElement("span");
+      correctSpan.className = "result-correct-inline-right";
+      correctSpan.textContent = "✓ Correct";
+      questionTitle.appendChild(correctSpan);
+
+      // Highlight correct option label
+      const correctRadio = questionBox.querySelector(`input[value='${item.correctAnswer}']`);
+      if (correctRadio) {
+        correctRadio.parentElement.classList.add("correct-selected");
+      }
     } else {
-      wrongQuestions.push({
-        questionIndex: questionIndex,
-        question: item.question,
-        options: item.options,
-        correctAnswer: item.correctAnswer,
-        selectedAnswer: selectedOption ? Number(selectedOption.value) : null
-      });
+      questionBox.classList.add("incorrect");
+      questionBox.classList.remove("correct");
+
+      const correctSpan = document.createElement("span");
+      correctSpan.className = "result-correct-inline";
+      correctSpan.textContent = `✓ Correct: ${item.options[item.correctAnswer]}`;
+      questionTitle.appendChild(correctSpan);
+
+      // Highlight wrong option selected if any
+      if (selectedOption) {
+        selectedOption.parentElement.classList.add("wrong-selected");
+      }
+      
+      // Also highlight correct option so they see what it was
+      const correctRadio = questionBox.querySelector(`input[value='${item.correctAnswer}']`);
+      if (correctRadio) {
+        correctRadio.parentElement.classList.add("correct-selected");
+      }
     }
   });
 
   const percentage = Math.round((score / activeQuiz.questions.length) * 100);
 
-  if (score === activeQuiz.questions.length) {
-    // Perfect score! Hide the header and display the success banner
-    if (reviewHeader) reviewHeader.classList.add("hidden");
-    
-    const perfectBanner = document.createElement("div");
-    perfectBanner.className = "result-perfect-banner";
-    perfectBanner.innerHTML = `
-      <h3>🎉 Perfect Score!</h3>
-      <p>Outstanding! You answered all ${activeQuiz.questions.length} questions correctly.</p>
-    `;
-    correctAnswersList.appendChild(perfectBanner);
-  } else {
-    // Show the incorrect questions review header
-    if (reviewHeader) {
-      reviewHeader.textContent = "Incorrect Questions & Corrections";
-      reviewHeader.classList.remove("hidden");
-    }
-
-    wrongQuestions.forEach(function(wrongQ) {
-      const card = document.createElement("div");
-      card.className = "result-wrong-card";
-
-      const title = document.createElement("p");
-      title.className = "result-question-title";
-      
-      const textSpan = document.createElement("span");
-      textSpan.textContent = `${wrongQ.questionIndex + 1}. ${wrongQ.question}`;
-      title.appendChild(textSpan);
-
-      const correctSpan = document.createElement("span");
-      correctSpan.className = "result-correct-inline";
-      correctSpan.textContent = `✓ Correct Answer: ${wrongQ.options[wrongQ.correctAnswer]}`;
-      title.appendChild(correctSpan);
-
-      card.appendChild(title);
-
-      const yourAnswerDiv = document.createElement("div");
-      yourAnswerDiv.className = "result-your-answer-inline";
-      
-      const labelText = document.createTextNode("Your Answer: ");
-      yourAnswerDiv.appendChild(labelText);
-
-      const wrongHighlightSpan = document.createElement("span");
-      wrongHighlightSpan.className = "wrong-highlight";
-      if (wrongQ.selectedAnswer !== null) {
-        wrongHighlightSpan.textContent = wrongQ.options[wrongQ.selectedAnswer];
-      } else {
-        wrongHighlightSpan.textContent = "[No Answer Selected]";
-      }
-      yourAnswerDiv.appendChild(wrongHighlightSpan);
-
-      card.appendChild(yourAnswerDiv);
-      
-      const listItem = document.createElement("li");
-      listItem.appendChild(card);
-      correctAnswersList.appendChild(listItem);
-    });
+  // Hide the submit button
+  if (submitQuizBtn) {
+    submitQuizBtn.classList.add("hidden");
   }
 
-  studentResultName.textContent = "Student: " + studentNameInput.value.trim();
-  scoreText.textContent = score + " out of " + activeQuiz.questions.length;
-  percentageText.textContent = percentage + "%";
-  resultSection.classList.remove("hidden");
+  // Remove existing score banner if any
+  const oldBanner = quizForm.querySelector(".quiz-score-banner");
+  if (oldBanner) oldBanner.remove();
+
+  // Create score banner at the bottom of the quiz
+  const scoreBanner = document.createElement("div");
+  scoreBanner.className = "quiz-score-banner";
+  scoreBanner.innerHTML = `
+    <h3>Quiz Completed!</h3>
+    <p class="score-display">You scored <strong>${score} out of ${activeQuiz.questions.length}</strong> (${percentage}%)</p>
+    <button type="button" id="quizDoneBtn" class="secondary-button" style="margin-top: 0;">Back to Subjects</button>
+  `;
+  quizForm.appendChild(scoreBanner);
+
+  // Bind Back to Subjects button
+  document.getElementById("quizDoneBtn").addEventListener("click", showSubjects);
+
+  // Scroll smoothly to score banner
+  scoreBanner.scrollIntoView({ behavior: "smooth" });
 }
 
 function checkFileProtocol() {
